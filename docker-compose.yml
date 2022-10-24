@@ -6,9 +6,9 @@ services:
     container_name: MovieMoodBot
     restart: always
     ports:
-      - "27018:27018"
+      - "5432:5432"
     environment:
-      POSTGRES_DB: Data
-      POSTGRES_USER: root
+      POSTGRES_DB: BotData
+      POSTGRES_USER: user
       POSTGRES_PASSWORD: 12345
 

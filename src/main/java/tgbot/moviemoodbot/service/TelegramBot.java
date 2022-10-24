@@ -12,8 +12,8 @@ import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import tgbot.moviemoodbot.config.BotConfig;
-import tgbot.moviemoodbot.model.User;
-import tgbot.moviemoodbot.repository.UserRepository;
+import tgbot.moviemoodbot.model.BotUser;
+import tgbot.moviemoodbot.repository.BotUserRepository;
 
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityExistsException;
@@ -26,7 +26,7 @@ import java.util.List;
 public class TelegramBot extends TelegramLongPollingBot {
 
     private final BotConfig config;
-    private final UserRepository userRepository;
+    private final BotUserRepository botUserRepository;
 
     private final String HELP_TEXT = "some help information";
     private final String USER_EXIST_EXC = "user this such id already exist";
@@ -93,19 +93,20 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void registerUser(Message message) {
-        if (userRepository.findById(message.getChatId()).isPresent()) {
+        if (botUserRepository.findById(message.getChatId()).isPresent()) {
             throw new EntityExistsException(USER_EXIST_EXC);
         }
 
         var chat = message.getChat();
 
-        var user = User.builder()
+        var user = BotUser.builder()
+                .chatId(chat.getId())
                 .username(chat.getUserName())
                 .firstName(chat.getFirstName())
                 .lastName(chat.getLastName())
                 .build();
 
-        userRepository.save(user);
+        botUserRepository.save(user);
 
         log.info("User registered: " + user.getUsername());
 

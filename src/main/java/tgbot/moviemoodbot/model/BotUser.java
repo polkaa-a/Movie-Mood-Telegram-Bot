@@ -5,7 +5,6 @@ import lombok.*;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.validation.constraints.NotBlank;
 
 @Getter
 @Setter
@@ -13,8 +12,8 @@ import javax.validation.constraints.NotBlank;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity(name = "user")
-public class User {
+@Entity(name = "botUser")
+public class BotUser {
 
     @Id
     private Long chatId;
@@ -26,6 +25,5 @@ public class User {
     private String lastName;
 
     @Column(name = "username")
-    @NotBlank(message = "shouldn't be empty")
     private String username;
 }
