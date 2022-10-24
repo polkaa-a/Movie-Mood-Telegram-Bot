@@ -11,6 +11,9 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScopeDefault;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import tgbot.moviemoodbot.config.BotConfig;
 import tgbot.moviemoodbot.model.BotUser;
@@ -20,6 +23,7 @@ import javax.annotation.PostConstruct;
 import javax.persistence.EntityExistsException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Slf4j
@@ -29,6 +33,7 @@ public class TelegramBot extends TelegramLongPollingBot {
 
     private final BotConfig config;
     private final BotUserRepository botUserRepository;
+    private final KeyboardManager keyboardManager;
 
     private final String HELP_TEXT = "some help information";
     private final String USER_EXIST_EXC = "user this such id already exist";
@@ -86,12 +91,13 @@ public class TelegramBot extends TelegramLongPollingBot {
         message.setChatId(chatId);
         message.setText(textToSend);
 
+        keyboardManager.bindTestKeyboard(message);
+
         try {
             execute(message);
         } catch (TelegramApiException e) {
             log.error("Error occurred: " + e.getMessage());
         }
-
     }
 
     private void registerUser(Message message) {
