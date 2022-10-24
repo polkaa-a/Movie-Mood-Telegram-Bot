@@ -1,5 +1,6 @@
 package tgbot.moviemoodbot.service;
 
+import com.vdurmont.emoji.EmojiParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,7 @@ import tgbot.moviemoodbot.repository.BotUserRepository;
 
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityExistsException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,7 +75,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     }
 
     private void startCommandReceived(long chatId, String name) {
-        var answer = "Hi, " + name + ", nice to meet you!";
+        var answer = "Hi, " + name + ", nice to meet you! " + EmojiParser.parseToUnicode(":purple_heart:");
         sendMessage(chatId, answer);
 
         log.info("Replied to user " + name);
@@ -104,11 +106,11 @@ public class TelegramBot extends TelegramLongPollingBot {
                 .username(chat.getUserName())
                 .firstName(chat.getFirstName())
                 .lastName(chat.getLastName())
+                .registeredAt(new Timestamp(System.currentTimeMillis()))
                 .build();
 
         botUserRepository.save(user);
 
         log.info("User registered: " + user.getUsername());
-
     }
 }

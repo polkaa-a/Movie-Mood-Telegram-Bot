@@ -5,6 +5,8 @@ import lombok.*;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.validation.constraints.NotNull;
+import java.sql.Timestamp;
 
 @Getter
 @Setter
@@ -26,4 +28,8 @@ public class BotUser {
 
     @Column(name = "username")
     private String username;
+
+    @Column(name = "registeredAt")
+    @NotNull(message = "have to be not null")
+    private Timestamp registeredAt;
 }
