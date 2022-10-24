@@ -12,14 +12,14 @@ import java.util.List;
 @Component
 public class KeyboardManager {
 
-    public void bindTestKeyboard(SendMessage message){
+    public void bindTestKeyboard(SendMessage message) {
         List<String[]> rows = new ArrayList<>();
         rows.add(new String[]{"a", "b", "c"});
         rows.add(new String[]{"d", "e"});
         bindKeyboard(message, createReplyKeyboardMarkup(rows));
     }
 
-    private ReplyKeyboardMarkup createReplyKeyboardMarkup(List<String[]> rows){
+    private ReplyKeyboardMarkup createReplyKeyboardMarkup(List<String[]> rows) {
         List<KeyboardRow> keyboardRows = new ArrayList<>();
 
         for (String[] row : rows) {
@@ -31,7 +31,7 @@ public class KeyboardManager {
         return new ReplyKeyboardMarkup(keyboardRows);
     }
 
-    private void bindKeyboard(SendMessage message, ReplyKeyboardMarkup markup){
+    private void bindKeyboard(SendMessage message, ReplyKeyboardMarkup markup) {
         message.setReplyMarkup(markup);
     }
 }
