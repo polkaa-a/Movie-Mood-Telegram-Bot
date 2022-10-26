@@ -2,11 +2,10 @@ package tgbot.moviemoodbot.model;
 
 import lombok.*;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
+import java.util.List;
 
 @Getter
 @Setter
@@ -30,6 +29,15 @@ public class BotUser {
     private String username;
 
     @Column(name = "registeredAt")
-    @NotNull(message = "have to be not null")
+    @NotNull(message = "can't be null")
     private Timestamp registeredAt;
+
+    @ManyToMany
+    @JoinTable(
+            name = "film_user",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "film_id")
+    )
+    @ToString.Exclude
+    private List<Film> films;
 }
