@@ -11,4 +11,6 @@ services:
       POSTGRES_DB: BotData
       POSTGRES_USER: user
       POSTGRES_PASSWORD: 12345
-
+    volumes:
+      - ./db:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/create_tables.sql
