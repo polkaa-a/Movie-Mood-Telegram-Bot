@@ -5,9 +5,8 @@ import lombok.*;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import java.util.List;
-import java.util.UUID;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 @Getter
 @Setter
@@ -20,10 +19,10 @@ public class Country {
 
     @Id
     @Column(name = "id")
-    private UUID id;
+    private Long id;
 
-    @ManyToMany(mappedBy = "countries")
-    @ToString.Exclude
-    private List<Film> films;
-
+    @Column(name = "name")
+    @NotBlank(message = "can't be empty")
+    @Size(max = 30, message = "can't be more than 30 characters")
+    private String name;
 }

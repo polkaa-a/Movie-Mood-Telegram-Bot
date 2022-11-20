@@ -8,7 +8,6 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -21,13 +20,13 @@ public class Film {
 
     @Id
     @Column(name = "id")
-    private UUID id;
+    private Long id;
 
     @Column(name = "originalName")
     @NotBlank(message = "can't be empty")
     private String originalName;
 
-    @Column(name = "originalName")
+    @Column(name = "russianName")
     @NotBlank(message = "can't be empty")
     private String russianName;
 
@@ -65,7 +64,12 @@ public class Film {
     @ToString.Exclude
     private List<Genre> genres;
 
-    @ManyToMany(mappedBy = "films")
+    @ManyToMany
+    @JoinTable(
+            name = "film_user",
+            joinColumns = @JoinColumn(name = "film_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
     @ToString.Exclude
     private List<BotUser> users;
 }

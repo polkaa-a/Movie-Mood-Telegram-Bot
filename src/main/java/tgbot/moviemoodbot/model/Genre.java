@@ -2,9 +2,11 @@ package tgbot.moviemoodbot.model;
 
 import lombok.*;
 
-import javax.persistence.*;
-import java.util.List;
-import java.util.UUID;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 @Getter
 @Setter
@@ -17,10 +19,10 @@ public class Genre {
 
     @Id
     @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private UUID id;
+    private Long id;
 
-    @ManyToMany(mappedBy = "genres")
-    @ToString.Exclude
-    private List<Film> films;
+    @Column(name = "name")
+    @NotBlank(message = "can't be empty")
+    @Size(max = 30, message = "can't be more than 30 characters")
+    private String name;
 }
