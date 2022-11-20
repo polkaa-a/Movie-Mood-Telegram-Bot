@@ -3,7 +3,7 @@ package tgbot.moviemoodbot.service;
 import com.vdurmont.emoji.EmojiParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -14,6 +14,10 @@ import org.telegram.telegrambots.meta.api.objects.commands.scope.BotCommandScope
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import tgbot.moviemoodbot.config.BotConfig;
 import tgbot.moviemoodbot.model.BotUser;
+import tgbot.moviemoodbot.model.Film;
+import tgbot.moviemoodbot.questionnaire.KeyboardManager;
+import tgbot.moviemoodbot.questionnaire.buttons.enums.GenreButton;
+import tgbot.moviemoodbot.questionnaire.buttons.enums.YearButton;
 import tgbot.moviemoodbot.repository.BotUserRepository;
 
 import javax.annotation.PostConstruct;
@@ -22,23 +26,40 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import static tgbot.moviemoodbot.questionnaire.buttons.enums.CountryButton.*;
+import static tgbot.moviemoodbot.questionnaire.buttons.enums.GenreButton.*;
+import static tgbot.moviemoodbot.questionnaire.buttons.enums.RatingButton.*;
+import static tgbot.moviemoodbot.questionnaire.buttons.enums.YearButton.YEAR_NO;
+import static tgbot.moviemoodbot.questionnaire.buttons.enums.YearButton.YEAR_YES;
+import static tgbot.moviemoodbot.service.provider.QuestionsProvider.*;
+
 @Slf4j
-@Component
+@Service
 @RequiredArgsConstructor
 public class TelegramBot extends TelegramLongPollingBot {
 
+    private static final String HELP_TEXT =
+            "/start - command for registration " +
+                    "(after it MovieMoodBot knows you and is ready to recommend you some film " +
+                    EmojiParser.parseToUnicode(":blush:") + ")" +
+                    "\n\n/film - command that will launch a questionnaire " +
+                    "and ask the MovieMoodBot to advise you on a good movie " +
+                    EmojiParser.parseToUnicode(":film_frames:");
+    private static final String USER_EXIST_EXC = "user this such id already exist";
     private final BotConfig config;
     private final BotUserRepository botUserRepository;
+    private final FilmService filmService;
+    private final GenreService genreService;
+    private final CountryService countryService;
     private final KeyboardManager keyboardManager;
-
-    private final String HELP_TEXT = "some help information";
-    private final String USER_EXIST_EXC = "user this such id already exist";
+    private List<Film> films = new ArrayList<>();
 
     @PostConstruct
     private void createMenu() {
         List<BotCommand> commands = new ArrayList<>();
         commands.add(new BotCommand("/start", "get welcome message"));
         commands.add(new BotCommand("/help", "info how to use this bot"));
+        commands.add(new BotCommand("/film", "get a movie"));
 
         try {
             this.execute(new SetMyCommands(commands, new BotCommandScopeDefault(), null));
@@ -63,32 +84,54 @@ public class TelegramBot extends TelegramLongPollingBot {
             var message = update.getMessage();
             var messageText = message.getText();
             var chatId = message.getChatId();
+            var firstName = message.getChat().getFirstName();
 
             switch (messageText) {
                 case "/start" -> {
                     registerUser(message);
-                    startCommandReceived(chatId, update.getMessage().getChat().getFirstName());
+                    startCommandReceived(chatId, firstName);
                 }
-                case "/help" -> sendMessage(chatId, HELP_TEXT);
-                default -> sendMessage(chatId, "Sorry, command wasn't recognized");
+                case "/help" -> sendMessage(getMessage(chatId, HELP_TEXT));
+                case "/film" -> {
+                    if (!botUserRepository.findById(message.getChatId()).isPresent()) {
+                        sendMessage(getMessage(chatId,
+                                "click /start - MovieMoodBot does not know you, register please" +
+                                        EmojiParser.parseToUnicode(":blush:")));
+                    } else {
+                        runQuestions(chatId);
+                    }
+                }
+                default -> sendMessage(getMessage(chatId,
+                        "Bot does not know such a command" +
+                                EmojiParser.parseToUnicode(":frowning_face:")));
             }
+        } else if (update.hasCallbackQuery()) {
+            var callbackData = update.getCallbackQuery().getData();
+            var messageId = update.getCallbackQuery().getMessage().getMessageId();
+            var chatId = update.getCallbackQuery().getMessage().getChatId();
+
+            filterRating(callbackData, chatId);
+            filterGenre(callbackData, chatId);
+            filterYear(callbackData, chatId);
+            filterCountry(callbackData, chatId);
         }
     }
 
     private void startCommandReceived(long chatId, String name) {
         var answer = "Hi, " + name + ", nice to meet you! " + EmojiParser.parseToUnicode(":purple_heart:");
-        sendMessage(chatId, answer);
+        sendMessage(getMessage(chatId, answer));
 
         log.info("Replied to user " + name);
     }
 
-    private void sendMessage(long chatId, String textToSend) {
+    private SendMessage getMessage(long chatId, String textToSend) {
         var message = new SendMessage();
         message.setChatId(chatId);
         message.setText(textToSend);
+        return message;
+    }
 
-        keyboardManager.bindTestKeyboard(message);
-
+    private void sendMessage(SendMessage message) {
         try {
             execute(message);
         } catch (TelegramApiException e) {
@@ -114,5 +157,120 @@ public class TelegramBot extends TelegramLongPollingBot {
         botUserRepository.save(user);
 
         log.info("User registered: " + user.getUsername());
+    }
+
+    private void runQuestions(long chatId) {
+        askRating(chatId);
+    }
+
+    private void askRating(long chatId) {
+        var message = getMessage(chatId, ASK_RATING);
+        sendMessage(keyboardManager.bindRatingQuestion(message));
+    }
+
+    private void askChooseRating(long chatId) {
+        var message = getMessage(chatId, CHOOSE_RATING);
+        sendMessage(keyboardManager.bindChooseRatingQuestion(message));
+    }
+
+    public void filterRating(String callbackData, long chatId) {
+        if (callbackData.equals(RATING_YES.getId())) {
+            askChooseRating(chatId);
+        } else if (callbackData.equals(RATING_NO.getId())) {
+            films = filmService.findAll();
+            askGenre(chatId);
+        } else if (callbackData.contains(rating)) {
+            films = filmService.findAllByRating(Float.parseFloat(getCallbackDataValue(callbackData)));
+            askGenre(chatId);
+        }
+    }
+
+    public void askGenre(long chatId) {
+        var message = getMessage(chatId, ASK_GENRE);
+        sendMessage(keyboardManager.bindChooseGenreQuestion(message));
+    }
+
+    public void askYear(long chatId) {
+        var message = getMessage(chatId, ASK_YEAR);
+        sendMessage(keyboardManager.bindYearQuestion(message));
+    }
+
+    public void askCountry(long chatId) {
+        var message = getMessage(chatId, ASK_COUNTRY);
+        sendMessage(keyboardManager.bindCountryQuestion(message));
+    }
+
+    public void askChooseYear(long chatId) {
+        var message = getMessage(chatId, CHOOSE_YEAR);
+        sendMessage(keyboardManager.bindChooseYearQuestion(message));
+    }
+
+    public void filterGenre(String callbackData, long chatId) {
+        if (callbackData.equals(GENRE_YES.getId())) {
+            askGenre(chatId);
+        } else if (callbackData.equals(GENRE_NO.getId()) || callbackData.equals(GENRE_ANY.getId())) {
+            askYear(chatId);
+        } else if (callbackData.contains(GenreButton.genre)) {
+            filterFilms(filmService.findAllByGenre(genreService.findByName(getCallbackDataValue(callbackData))));
+            askGenreLoop(chatId);
+        }
+    }
+
+    public void askGenreLoop(long chatId) {
+        var message = getMessage(chatId, ASK_GENRE_LOOP);
+        sendMessage(keyboardManager.bindGenreQuestion(message));
+    }
+
+    public void askChooseCountry(long chatId) {
+        var message = getMessage(chatId, CHOOSE_COUNTRY);
+        sendMessage(keyboardManager.bindChooseCountryQuestion(message));
+    }
+
+    public void askChooseCast(long chatId) {
+        var message = getMessage(chatId, CHOOSE_CAST);
+        // TODO: 19.11.2022 bind photos to message (and numbers to choose)
+        sendMessage(message);
+    }
+
+    public void filterYear(String callbackData, long chatId) {
+        if (callbackData.equals(YEAR_YES.getId())) {
+            askChooseYear(chatId);
+        } else if (callbackData.equals(YEAR_NO.getId())) {
+            askCountry(chatId);
+        } else if (callbackData.contains(YearButton.year)) {
+            List<Film> filmsByYear = filmService.findAllByYear(Integer.parseInt(getCallbackDataValue(callbackData)));
+            filterFilms(filmsByYear);
+            askCountry(chatId);
+        }
+    }
+
+    public void filterCountry(String callbackData, long chatId) {
+        if (callbackData.equals(COUNTRY_YES.getId())) {
+            askChooseCountry(chatId);
+        } else if (callbackData.equals(COUNTRY_NO.getId()) || callbackData.equals(COUNTRY_ANY.getId())) {
+            askChooseCast(chatId);
+        } else if (callbackData.contains(country)) {
+            List<Film> filmsByCountry = filmService.findAllByCountry(countryService.findByName(getCallbackDataValue(callbackData)));
+            filterFilms(filmsByCountry);
+            askChooseCast(chatId);
+        }
+    }
+
+    public void filterCast() {
+
+    }
+
+    private void filterFilms(List<Film> sample) {
+        List<Film> toRemove = new ArrayList<>();
+        for (Film film : films) {
+            if (!sample.contains(film)) {
+                toRemove.add(film);
+            }
+        }
+        films.removeAll(toRemove);
+    }
+
+    private String getCallbackDataValue(String callbackData) {
+        return callbackData.split("_")[1];
     }
 }
