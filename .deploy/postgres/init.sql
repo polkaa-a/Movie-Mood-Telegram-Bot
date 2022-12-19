@@ -57,30 +57,23 @@ CREATE TABLE IF NOT EXISTS BOT_USER
         AND (BOT_USER.USERNAME != ''))
 );
 
-CREATE TABLE IF NOT EXISTS FILM_USER
-(
-    FILM_ID BIGINT REFERENCES FILM (ID) ON DELETE CASCADE ON UPDATE CASCADE,
-    USER_ID BIGINT REFERENCES COUNTRY (ID) ON DELETE CASCADE ON UPDATE CASCADE,
-    PRIMARY KEY (FILM_ID, USER_ID)
-);
-
 ------------------- FILMS -------------------
 
 INSERT INTO FILM VALUES
-       (1, 'The Green Mile', 'Зеленая миля', 1999, 1,
+       (1, 'The Green Mile', 'Зеленая миля', 1999, 2,
         'Miracles do happen. Miracles happen in the most unexpected places. Paul Edgecomb did not believe in miracles.', 9.2),
-       (2, 'Forrest Gump', 'Форест Гамп', 1994, 2,
+       (2, 'Forrest Gump', 'Форест Гамп', 1994, 3,
         'The world will never be the same once you have seen it through the eyes of Forrest Gump.', 8.9),
-       (3, 'Coco', 'Тайна Коко', 2017, 3,
+       (3, 'Coco', 'Тайна Коко', 2017, 4,
         'If there is no one left in the living world to remember you, you disappear from this world.', 8.8),
-       (4, 'Interstellar', 'Интерстеллар', 2014, 4,
+       (4, 'Interstellar', 'Интерстеллар', 2014, 5,
         'Time cannot put anything in your hands until you let go off the time.', 8.6),
-       (5, 'Fight Club', 'Бойцовский клуб', 1999, 5,
+       (5, 'Fight Club', 'Бойцовский клуб', 1999, 6,
         'It’s only after we’ve lost everything that we’re free to do anything', 8.6),
-       (6, 'WALL·E', 'ВАЛЛ·И', 2008, 6, 'Name? WALL-E', 8.3),
-       (7, 'Inception', 'Начало', 2010, 7,
+       (6, 'WALL·E', 'ВАЛЛ·И', 2008, 7, 'Name? WALL-E', 8.3),
+       (7, 'Inception', 'Начало', 2010, 8,
         'Building a dream from your memory is the easiest way of losing your grasp on what’s real and what is a dream.', 8.7),
-       (8 ,'Autumn in New York', 'Осень в Нью-Йорке', 2000, 8, 'I would go with you in a heartbeat.', 7.4);
+       (8 ,'Autumn in New York', 'Осень в Нью-Йорке', 2000, 1, 'I would go with you in a heartbeat.', 7.4);
 
 ------------------- GENRES -------------------
 
