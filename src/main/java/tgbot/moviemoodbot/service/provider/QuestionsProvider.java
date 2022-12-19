@@ -10,5 +10,6 @@ public class QuestionsProvider {
     public static final String CHOOSE_RATING = "Select the lower threshold of the rating value or click \"Any\"";
     public static final String CHOOSE_COUNTRY = "Select the country or click \"Any\"";
     public static final String CHOOSE_CAST = "Select the cast of the film";
+    public static final String CHOOSE_CAST_NUMBERS = "Type the number that corresponds to the number in the picture";
     public static final String CHOOSE_YEAR = "Select the higher threshold of the year of premiere or click \"Enter year\"";
 }
