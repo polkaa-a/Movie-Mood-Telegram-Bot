@@ -8,6 +8,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Objects;
 
 @Getter
 @Setter
@@ -64,12 +65,16 @@ public class Film {
     @ToString.Exclude
     private List<Genre> genres;
 
-    @ManyToMany
-    @JoinTable(
-            name = "film_user",
-            joinColumns = @JoinColumn(name = "film_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
-    @ToString.Exclude
-    private List<BotUser> users;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Film film = (Film) o;
+        return year == film.year && originalName.equals(film.originalName) && russianName.equals(film.russianName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(originalName, russianName, year);
+    }
 }

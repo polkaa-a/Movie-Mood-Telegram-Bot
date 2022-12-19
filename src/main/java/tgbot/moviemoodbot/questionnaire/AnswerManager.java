@@ -10,6 +10,7 @@ import tgbot.moviemoodbot.questionnaire.buttons.enums.GenreButton;
 import tgbot.moviemoodbot.questionnaire.buttons.enums.RatingButton;
 import tgbot.moviemoodbot.questionnaire.buttons.enums.YearButton;
 import tgbot.moviemoodbot.repository.CountryRepository;
+import tgbot.moviemoodbot.repository.FilmRepository;
 import tgbot.moviemoodbot.repository.GenreRepository;
 
 import java.util.*;
@@ -25,6 +26,7 @@ public class AnswerManager {
     private static final String NO = "No";
 
     private final GenreRepository genreRepository;
+    private final FilmRepository filmRepository;
     private final CountryRepository countryRepository;
 
     public List<List<Button>> getBasicAnswersList(Button yes, Button no) {
@@ -96,6 +98,7 @@ public class AnswerManager {
         list.add(any);
         return list;
     }
+
 
     private Map<String, String> splitGenres(List<Genre> genres, int index) {
         Map<String, String> map = new HashMap<>();
